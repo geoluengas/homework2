@@ -21,12 +21,14 @@
 #define TAB 9
 #define NEW_LINE 10
 
+#define DEBUG  0 /*1 to set DEBUG mode. 0 to unset DEBUG*/
+
 /**
  * 
  * @param s
  * @return 
  */
-int cs531_system(char *s); 
+int cs531_system(char *s);
 
 /**
  * 
@@ -44,7 +46,7 @@ int argument_string_to_argv(char **argv, char *s);
 char printHostname();
 
 int main(int argc, char *argv[]) {
-    //printHostname();
+    if (DEBUG) printHostname();
     int status;
     status = cs531_system(argv[1]);
     return status;
@@ -75,25 +77,23 @@ int cs531_system(char *s) {
 
 int argument_string_to_argv(char **argv, char *s) {
     int argc = 0;
-    printf("Command : (");
+    if (DEBUG) printf("Command : (");
     while (*s != NULL) { //move pointer through string
         while (*s == SPACE || *s == TAB || *s == NEW_LINE) { //replace spaces, tabs, and newlines with null
-            printf("%c", *s);
+            if (DEBUG) printf("%c", *s);
             *s++ = NULL;
         }
         argc++;
         *argv++ = s; //set the current argument to current position of s
         while (*s != NULL && *s != SPACE && *s != TAB && *s != NEW_LINE) { //Eat all non-blank/null chars
-            printf("%c", *s);
+            if (DEBUG) printf("%c", *s);
             s++;
         }
     }
-    printf(")\n");
+    if (DEBUG) printf(")\n");
     argc++;
     argv = NULL;
-    printf("\nargc = %d\n", argc);
-    
-    printf("\n");
+    if (DEBUG) printf("argc = %d\n", argc);
     return argc;
 }
 
