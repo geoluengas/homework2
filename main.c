@@ -21,8 +21,9 @@
 #define TAB 9
 #define NEW_LINE 10
 
-#define DEBUG  0 /*1 to set DEBUG mode. 0 to unset DEBUG*/
-
+#ifndef DEBUG
+#define DEBUG 0 /*1 to set DEBUG mode. 0 to unset DEBUG*/
+#endif
 /**
  * 
  * @param s
