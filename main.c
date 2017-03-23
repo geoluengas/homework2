@@ -21,8 +21,26 @@
 #define TAB 9
 #define NEW_LINE 10
 
-int cs531_system(char *s); /* run command line s*/
+/**
+ * 
+ * @param s
+ * @return 
+ */
+int cs531_system(char *s); 
+
+/**
+ * 
+ * Function to parse the command line argument string
+ * @param argv the char pointer array to store the arguments
+ * @param s the command line argument string
+ * @return the number of arguments in the argument string
+ */
 int argument_string_to_argv(char **argv, char *s);
+
+/**
+ * Get the hostname the program is running on
+ * @return the hostname
+ */
 char printHostname();
 
 int main(int argc, char *argv[]) {
@@ -55,12 +73,6 @@ int cs531_system(char *s) {
     return 1;
 }
 
-/**
- * Function to parse the command line argument string
- * @param argv the char pointer array to store the arguments
- * @param s the command line argument string
- * @return the number of arguments in the argument string
- */
 int argument_string_to_argv(char **argv, char *s) {
     int argc = 0;
     printf("Command : (");
@@ -81,18 +93,10 @@ int argument_string_to_argv(char **argv, char *s) {
     argv = NULL;
     printf("\nargc = %d\n", argc);
     
-    for (int i = 0; i < argc + 1; i++) {
-        printf("(%s)", &argv[i]);
-    }
-    
     printf("\n");
     return argc;
 }
 
-/**
- * Get the hostname the program is running on
- * @return the hostname
- */
 char printHostname() {
     char hostname[1024];
     gethostname(hostname, 1024);
