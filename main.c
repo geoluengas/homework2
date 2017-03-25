@@ -32,8 +32,14 @@
 int cs531_system(char *s);
 
 /**
+ * Function to handle SIG
+ * @param sig
+ */
+void handle_signal(int sig);
+
+/**
  * 
- * Function to parse the command line argument string
+ * Function to parse the command line argument string into char pointer array
  * @param argv the char pointer array to store the arguments
  * @param s the command line argument string
  * @return the number of arguments in the argument string
@@ -47,32 +53,44 @@ int argument_string_to_argv(char **argv, char *s);
 char printHostname();
 
 int main(int argc, char *argv[]) {
-    if (DEBUG) printHostname();
     int status;
     status = cs531_system(argv[1]);
     return status;
 }
 
 int cs531_system(char *s) {
+    if (DEBUG) printHostname();
 
-    if (!s) { //Check is s null. Return -1 if s==null
-        printf("Error: Command is %s.\n", s);
+    int child_status; //child exit status
+    pid_t child_pid; //child process ID
+
+    if (!s) { //Check if s null. Return -1 if s==null
+        fprintf(stderr, "Error: Command is %s.\n", s);
         return -1;
     }
     if (strlen(s) >= MAX_ARGS_LEN) { //check if s meets length limits
-        printf("Error: Argument string length exceeded (Max length = %d).\n", MAX_ARGS_LEN);
+        fprintf(stderr, "Error: Argument string length exceeded (Max length = %d).\n", MAX_ARGS_LEN);
         return -1;
     }
 
-    const char *argv[MAX_ARGS_LEN]; //array to store command line args
+    const char *argv[MAX_ARGS_LEN]; //array to store command line args parsed from s
 
     int argc = argument_string_to_argv(argv, s); //Parse command line argument string
 
-    execvp(*argv, argv); //execute the command. Does not return if successful
+    pid_t pid = fork(); //Fork child process to run execvp()
 
-    //If execvp fails, print an error
-    printf("Error: Unsupported command or command failed to execute.\n");
-
+    if (pid == NULL) {//if child process, run execvp
+        execvp(*argv, argv); //execute the command. Does not return if successful
+        //If execvp fails, print an error
+        fprintf(stderr, "Error: Unsupported command or command failed to execute.\n");
+    } else {//if parent process wait for child
+        if (pid == (pid_t) (-1)) {
+            fprintf(stderr, "Fork failed.\n");
+        } else {
+            child_pid = wait(&child_status); //wait for child proc to complete
+            printf("Parent(%ld): Child(%ld) exited with status = %d\n", (long) getpid(), (long) child_pid, child_status);
+        }
+    }
     return 1;
 }
 
@@ -101,6 +119,12 @@ int argument_string_to_argv(char **argv, char *s) {
 char printHostname() {
     char hostname[1024];
     gethostname(hostname, 1024);
-    printf("\nhostname : %s\n", hostname);
+    printf("hostname : %s\n", hostname);
     return hostname;
+}
+
+void handle_signal(int sig) {
+    if (sig == SIGINT) {
+        printf("Received SIGINT\n");
+    }
 }
