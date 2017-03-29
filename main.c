@@ -1,11 +1,10 @@
 /*
  * File:   HW2-CS531-Gxxx.c
- * Author: yluengas
  *
  * Created on March 21, 2017, 7:57 PM
  */
 
-//TODO: add handling for SIGINT
+//TODO: add open()/close() usage based on lecture
 
 #include <signal.h>
 #include <stdio.h>
@@ -24,6 +23,7 @@
 #ifndef DEBUG
 #define DEBUG 0 /*1 to set DEBUG mode. 0 to unset DEBUG*/
 #endif
+
 /**
  * 
  * @param s
@@ -35,7 +35,7 @@ int cs531_system(char *s);
  * Function to handle SIG
  * @param sig
  */
-void handle_signal(int sig);
+void handle_signal(int signal);
 
 /**
  * 
@@ -47,7 +47,7 @@ void handle_signal(int sig);
 int argument_string_to_argv(char **argv, char *s);
 
 /**
- * Get the hostname the program is running on
+ * Debug function to get the hostname the program is running on
  * @return the hostname
  */
 char printHostname();
@@ -61,10 +61,13 @@ int main(int argc, char *argv[]) {
 int cs531_system(char *s) {
     if (DEBUG) printHostname();
 
+    int original_handler; //stores the original signal handler before being changed by the program
+    int temp_handler; //stores the temporary signal handler set by the program
+
     int child_status; //child exit status
     pid_t child_pid; //child process ID
 
-    if (!s) { //Check if s null. Return -1 if s==null
+    if (!s) { //Check if argument string is null. Return -1 if s==null
         fprintf(stderr, "Error: Command is %s.\n", s);
         return -1;
     }
@@ -80,18 +83,33 @@ int cs531_system(char *s) {
     pid_t pid = fork(); //Fork child process to run execvp()
 
     if (pid == NULL) {//if child process, run execvp
+
         execvp(*argv, argv); //execute the command. Does not return if successful
         //If execvp fails, print an error
         fprintf(stderr, "Error: Unsupported command or command failed to execute.\n");
-    } else {//if parent process wait for child
-        if (pid == (pid_t) (-1)) {
+        return -1;
+
+    } else {//if parent process
+        if (pid == (pid_t) (-1)) { //error out if fork() failed
             fprintf(stderr, "Fork failed.\n");
+            return -1;
         } else {
+            //Make parent ignore SIGINT while child is still running
+            if ((original_handler = signal(SIGINT, handle_signal)) == SIG_ERR) {
+                fprintf(stderr, "signal not caught.");
+            }
+            if (DEBUG) printf("original SIGNINT handler = %d\n", original_handler);
+
             child_pid = wait(&child_status); //wait for child proc to complete
+
+            //Restore SIGINT handler to previous state
+            temp_handler = signal(SIGINT, original_handler);
+            if (DEBUG) printf("temp SIGINT handler = %d\n", temp_handler);
+
             printf("Parent(%ld): Child(%ld) exited with status = %d\n", (long) getpid(), (long) child_pid, child_status);
         }
     }
-    return 1;
+    return 1; // return success
 }
 
 int argument_string_to_argv(char **argv, char *s) {
@@ -123,8 +141,13 @@ char printHostname() {
     return hostname;
 }
 
-void handle_signal(int sig) {
-    if (sig == SIGINT) {
-        printf("Received SIGINT\n");
+void handle_signal(int signal) {
+    switch (signal) {
+        case SIGINT:
+            fprintf(stderr, "Caught SIGINT for PID :%d\n", getpid());
+            break;
+        default:
+            fprintf(stderr, "Signal not handled : %d", signal);
+            break;
     }
 }
