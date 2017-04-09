@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
 int cs531_system(const char *comm) {
 
-    if (strlen(&comm) == 0) {
+    if (comm == NULL || strlen(comm) == 0) {
         fprintf(stderr, "Error: no command provided. Exiting.\n");
         return -1;
     }
